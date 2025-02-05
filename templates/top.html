@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Top Section</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Base styling for body and general grid container */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+    
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+        }
+    
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; /* Three equal-width columns */
+            grid-template-rows: 1fr 1fr; /* Two equal-height rows */
+            gap: 10px; /* Space between grid items */
+            padding: 20px;
+            height: 100vh; /* Ensure full height for the grid */
+            box-sizing: border-box; /* Include padding in box size */
+        }
+    
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            background-color: white;
+            box-sizing: border-box;
+        }
+    
+        /* Styling for all grid sections */
+        #top-left, #top-center, #top-right,
+        #bottom-left, #bottom-center, #bottom-right {
+            height: 100%; /* Equal height for all grid items */
+        }
+    
+        /* Add specific styles for individual sections as needed */
+        #top-left, #bottom-left {
+            background-color: #f9f9f9; /* Example background for left boxes */
+        }
+    
+        #top-center, #bottom-center {
+            background-color: #f9f9f9; /* Example background for center boxes */
+        }
+    
+        #top-right, #bottom-right {
+            background-color: #f9f9f9; /* Example background for right boxes */
+        }
+
+        /* Scoped CSS for course-table inside #top-center */
+        #top-center .course-table th, #top-center .course-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+    
+        #top-center .course-table th {
+            background-color: #f4f4f4;
+            font-weight: 600;
+        }
+    
+        #top-center .course-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+    
+        #top-center .course-table tr:hover {
+            background-color: #f1f1f1;
+        }
+    
+        /* Table styling */
+        #top-center .course-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: fixed; 
+        }
+    
+        #top-center .course-table th, #top-center .course-table td {
+            border: 1px solid #ddd;
+            padding: 10px;        
+            text-align: left;
+            font-size: 14px;      
+        }
+    
+        #top-center .course-table th {
+            background-color: #f4f4f4; 
+            font-weight: 600;          
+        }
+    
+        #top-center .course-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+    
+        #top-center .course-table tr:hover {
+            background-color: #f1f1f1; 
+        }
+
+        /* Progress bar styles */
+        .progress-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 20px;
+            width: 0%;
+            background-color: #4caf50;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .details {
+            margin-top: 20px;
+        }
+
+        .details p {
+            font-size: 16px;
+        }
+
+        /* Additional styling for the From and To dates */
+        .progress-dates {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            top: -20px; /* Position above the bar */
+        }
+
+        .progress-dates span {
+            color: #000;
+        }
+
+        /* Adjusted styles for the search bar inside the top-right box */
+        .search-bar-container {
+            position: relative; /* Position relative to its parent container */
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 5px;
+            margin-bottom: 10px; /* Add spacing between the search bar and other content */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input field takes available space but allows the button to be on the right */
+        .search-bar-container input[type="text"] {
+            flex-grow: 1; /* Makes the input field grow to fill available space */
+            max-width: 180px; /* Set a max width for better control */
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        /* Button is positioned on the far right */
+        .search-bar-container button {
+            padding: 8px 15px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            position: absolute;
+            right: 5px; /* Position the button on the far right */
+        }
+
+        .search-bar-container button:hover {
+            background-color: #45a049;
+        }
+
+
+
+    </style>
+</head>
+<body>
+
+    <div class="grid-container">
+        <!-- Top row -->
+        <div class="grid-item" id="top-left">
+            <h3>Laptop Inventory</h3>
+            {% if donut_chart_l %}
+                <div id="donut-chart">
+                    {{ donut_chart_l | safe }}
+                </div>
+            {% else %}
+                <p>Donut chart will be displayed here once the assets file is processed.</p>
+            {% endif %}
+        </div>
+        <div class="grid-item" id="top-center">
+            <h2>Courses Ending</h2>
+            <!-- Date picker at the top right of the top-center box -->
+            <input type="date" id="date-picker" onchange="updateDate()" />
+            {% if course_data_results %}
+                <table class="course-table" id="course-table">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>To Date</th>
+                            <th>Devices</th>
+                        </tr>
+                    </thead>
+                    <tbody id="course-table-body">
+                        {% for course_data in course_data_results %}
+                            {% set parts = course_data.split(' - ') %}
+                            <tr>
+                                <td>{{ parts[0] }}</td>  <!-- Course -->
+                                <td>{{ parts[1] }}</td>  <!-- To Date -->
+                                <td>{{ parts[2] }}</td>  <!-- Devices -->
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    
+                </table>
+            {% else %}
+                <p>No course ending this week</p>
+            {% endif %}
+        </div>
+        
+        <div class="grid-item" id="top-right">
+            <!-- Search bar in the top-right box -->
+            <div class="search-bar-container">
+                <input type="text" id="search-input" placeholder="Enter Device ID" />
+                <button onclick="searchDevice()">Search</button>
+            </div>
+            
+            <!-- Progress Bar Section -->
+            <div class="progress-container">
+                <div class="progress-dates">
+                    <span id="progress-from"></span>
+                    <span id="progress-to"></span>
+                </div>
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="progress-text" id="progress-text"></div>
+            </div>
+            <div class="details">
+                <p><strong>Location:</strong> <span id="location"></span></p>
+                <p><strong>Asset ID:</strong> <span id="asset-id"></span></p>
+                <p><strong>Other Asset IDs:</strong> <span id="other-asset-ids"></span></p>
+            </div>
+        </div>
+
+        <!-- Bottom row -->
+        <div class="grid-item" id="bottom-left">
+            <h3>iPad Inventory</h3>
+            {% if donut_chart_a %}
+                <div id="donut-chart">
+                    {{ donut_chart_a | safe }}
+                </div>
+            {% else %}
+                <p>Donut chart will be displayed here once the assets file is processed.</p>
+            {% endif %}
+        </div>
+
+        <div class="grid-item" id="bottom-center">
+            <h2>Monthly Laptop and iPad Count</h2>
+        
+            <!-- Display Monthly Bar Chart -->
+            {% if monthly_bar_chart %}
+                <div id="monthly-bar-chart">
+                    {{ monthly_bar_chart | safe }}
+                </div>
+            {% else %}
+                <p>Bar chart will be displayed here once the assets file is processed.</p>
+            {% endif %}
+        </div>
+        <div class="grid-item" id="bottom-right">
+            <h2>Monthly Aircraft Type Count</h2>
+            
+            <!-- Display Monthly Aircraft Type Bar Chart -->
+            {% if monthly_fleet_chart %}
+                <div id="monthly-fleet-bar-chart">
+                    {{ monthly_fleet_chart | safe }}
+                </div>
+            {% else %}
+                <p>Bar chart will be displayed here once the course data is processed.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // This function sends the search request to the backend and handles the response
+        function searchDevice() {
+            // Get the search input value
+            const searchInput = document.getElementById("search-input").value.trim();
+            
+            if (!searchInput) {
+                alert("Please enter a device ID.");
+                return;
+            }
+    
+            // Send the data to the backend using Fetch API (POST request)
+            fetch("/top/get_search_results", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ deviceId: searchInput }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the server's response here
+                console.log("Server response:", data);
+                
+                // Call the function to populate the search results
+                populateSearchResults(data); // Pass the response data to the populateSearchResults function
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while searching.");
+            });
+        }
+        
+        // This function populates the search results dynamically in the UI
+        function populateSearchResults(searchResults) {
+            // Set the progress bar based on the completion percentage
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const completionPercentage = searchResults['Completion Percentage'];
+        
+            progressBar.style.width = `${completionPercentage}%`;
+            progressText.innerText = `${completionPercentage.toFixed(2)}% Complete`;
+        
+            // Set other content
+            document.getElementById('location').innerText = searchResults['Location'];
+            document.getElementById('asset-id').innerText = searchResults['Asset ID'];
+            document.getElementById('other-asset-ids').innerText = searchResults['Other Asset IDs'].join(', ');
+        
+            // Set the From and To dates
+            document.getElementById('progress-from').innerText = searchResults['From'];
+            document.getElementById('progress-to').innerText = searchResults['To'];
+        }
+    
+        window.onload = function() {
+            // Get the next Thursday's date and format it as 'YYYY-MM-DD'
+            const nextThursday = getNextThursdayDate();
+            
+            // Set the default value of the date picker to next Thursday
+            document.getElementById('date-picker').value = nextThursday;
+            
+            // Additional logic if needed, such as loading search results
+            loadSearchResults;
+        };
+
+
+        function getNextThursdayDate() {
+            const today = new Date();
+            const daysToAdd = (4 - today.getDay() + 7) % 7; // Get days until next Thursday (4 is Thursday in JavaScript Date)
+            today.setDate(today.getDate() + daysToAdd); // Move the date to next Thursday
+
+            // Format the date to 'YYYY-MM-DD'
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Add 1 because months are 0-indexed
+            const day = String(today.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateDate() {
+            // Get the selected date from the date picker input
+            const selectedDate = document.getElementById('date-picker').value;
+
+            // Construct the URL with the selected date as a query parameter
+            const url = `/top/update_date?end_date=${selectedDate}`;
+
+            // Send a GET request to the backend with the selected date
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the course table body with the new data received from the backend
+                    document.getElementById('course-table-body').innerHTML = data.course_table;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+
+
+
+    </script>
+    
+
+</body>
+</html>

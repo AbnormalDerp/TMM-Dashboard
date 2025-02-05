@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File and Date Selector</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #excel-container {
+            width: 70%;
+            height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+
+        #button-container {
+            width: 25%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        .button.red {
+            background-color: red;
+        }
+
+        .button.green {
+            background-color: green;
+        }
+
+        .button.blue {
+            background-color: rgb(0, 162, 255);
+        }
+
+        .settings-container {
+            margin-top: 20px;
+            display: none;
+            width: 100%;
+            flex-grow: 1;
+            border-top: 2px solid #ddd;
+            padding-top: 20px;
+        }
+
+        .settings-container h3 {
+            margin-bottom: 20px;
+        }
+
+        .tab-content {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .settings-tab {
+            width: 45%;
+            margin-right: 10px;
+            margin-bottom: 20px;
+        }
+
+        .settings-tab textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Excel Container -->
+    <div id="excel-container" class="scrollable-box"></div>
+
+    <!-- Button Container -->
+    <div id="button-container">
+        <button id="myteamBtn" class="button {{ 'green' if myteam_file_detected else 'red' }}" onclick="document.getElementById('myteamInput').click()">
+            {{ 'MyTeam File Detected' if myteam_file_detected else 'Select MyTeam File' }}
+        </button>
+        <input id="myteamInput" type="file" accept=".xls,.xlsx" style="display: none;" onchange="uploadFile(this, '/upload-myteam', 'myteamBtn')">
+
+        <button id="assetsBtn" class="button {{ 'green' if assets_file_detected else 'red' }}" onclick="document.getElementById('assetsInput').click()">
+            {{ 'Assets File Detected' if assets_file_detected else 'Select Assets File' }}
+        </button>
+        <input id="assetsInput" type="file" accept=".csv" style="display: none;" onchange="uploadFile(this, '/upload-assets', 'assetsBtn')">
+
+        <input type="date" id="startDate" class="button" style="display:none">
+        <input type="date" id="endDate" class="button" style="display: none">
+
+        <button id="settingsBtn" class="button blue" onclick="toggleSettings()">Settings</button>
+    </div>
+
+    <div id="notification"></div>
+
+    <!-- Settings Container -->
+    <div id="settings-container" class="settings-container">
+        <h3>Settings</h3>
+        <div id="settings-content" class="tab-content">
+            <!-- Tabs will be populated dynamically here -->
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+
+    
+
+    <script>
+        // Toggle settings container visibility
+        function toggleSettings() {
+            const settingsContainer = document.getElementById('settings-container');
+            if (settingsContainer.style.display === 'none') {
+                settingsContainer.style.display = 'block';
+                loadSettings(); // Fetch and load settings into the container
+            } else {
+                settingsContainer.style.display = 'none';
+            }
+        }
+
+        // Fetch settings from the backend
+        function loadSettings() {
+            fetch('/bottom/settings', { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    populateSettingsContent(data);
+                })
+                .catch(error => console.error('Error loading settings:', error));
+        }
+
+        // Populate the settings content dynamically with editable text areas
+        function populateSettingsContent(config) {
+            const contentContainer = document.getElementById('settings-content');
+            contentContainer.innerHTML = ''; // Clear existing content
+
+            const sections = {
+                "RSAF Laptops": "rsaf_laptops",
+                "A380 Laptops": "a380_laptops",
+                "Cannot Assign Laptops": "cannot_assign_laptops",
+                "Cannot Assign iPads": "cannot_assign_ipads",
+                "Include Course Types": "include_course_types",
+                "Customers to Exclude": "customers_to_exclude",
+                "Overdue Days": "OD_Days"
+            };
+
+            Object.keys(sections).forEach(section => {
+                const tabContent = document.createElement('div');
+                tabContent.classList.add('settings-tab');
+                // Hide specific sections
+                if (["RSAF Laptops", "A380 Laptops", "Cannot Assign Laptops", "Cannot Assign iPads", "Include Course Types", "Customers to Exclude"].includes(section)) {
+                    tabContent.style.display = "none";  // Hide these sections
+                }
+                tabContent.innerHTML = `
+                    <h5>${section}</h5>
+                    <textarea id="${section}-textarea">${config[sections[section]].join('\n')}</textarea>
+                `;
+                contentContainer.appendChild(tabContent);
+            });
+        }
+
+        // Save the updated settings back to the server
+        function saveSettings() {
+            const updatedConfig = {};
+            const sections = {
+                "RSAF Laptops": "rsaf_laptops",
+                "A380 Laptops": "a380_laptops",
+                "Cannot Assign Laptops": "cannot_assign_laptops",
+                "Cannot Assign iPads": "cannot_assign_ipads",
+                "Include Course Types": "include_course_types",
+                "Customers to Exclude": "customers_to_exclude",
+                "Overdue Days": "OD_Days"
+            };
+
+            Object.keys(sections).forEach(section => {
+                const textarea = document.getElementById(`${section}-textarea`);
+                updatedConfig[sections[section]] = textarea.value.trim().split('\n').filter(line => line);
+            });
+
+            // Send updated settings to the server
+            fetch('/bottom/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedConfig),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message || data.rsaf_laptops) {  // Check if the data contains the updated settings
+                    alert('Settings saved successfully!');
+                    
+                    
+                } else {
+                    alert('Failed to save settings.');
+                }
+                // Trigger the generation of the table with the new settings
+                triggerGenerate();
+            })
+            .catch(error => console.error('Error saving settings:', error));
+        }
+
+
+
+
+        // Upload File function
+        function uploadFile(input, endpoint, buttonId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(endpoint, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(() => {
+                    document.getElementById(buttonId).classList.remove('red');
+                    document.getElementById(buttonId).classList.add('green');
+                    triggerGenerate();  // Automatically trigger generate when file is uploaded
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById(buttonId).classList.add('red');
+                });
+        }
+
+        // Trigger Generate function automatically
+        function triggerGenerate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                document.getElementById('notification').innerText = 'Please select both start and end dates.';
+                return;
+            }
+
+            fetch('/bottom/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('notification').innerText = data.error;
+                } else {
+                    document.getElementById('notification').innerText = '';  // Clear any existing text
+
+                    // Display the HTML table
+                    document.getElementById('excel-container').innerHTML = data.html_table;
+
+                    // Create a download link
+                    const downloadLink = document.createElement('a');
+
+                    // Extract the filename from the response (assuming it has 'output_file')
+                    const fileName = data.output_file.split('/').pop(); // Get the filename from the path
+
+                    // Construct the download URL
+                    downloadLink.href = `/bottom/download/${encodeURIComponent(fileName)}`;  // Use /bottom/download/<filename>
+
+                    // Set the download attribute to suggest the filename
+                    downloadLink.download = fileName;  
+                    downloadLink.textContent = 'Download Processed File';
+
+                    // Check if the link is created properly
+                    console.log(downloadLink);  // For debugging
+
+                    // Append the download link to the notification section
+                    const notificationElement = document.getElementById('notification');
+                    notificationElement.innerHTML = '';  // Clear any previous content
+                    notificationElement.appendChild(downloadLink);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+
+
+
+        // Get next Monday function
+        function getNextMonday() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const daysUntilMonday = (8 - dayOfWeek) % 7;
+            const nextMonday = new Date(today);
+            nextMonday.setDate(today.getDate() + daysUntilMonday);
+            return nextMonday;
+        }
+
+        // Format Date function
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // Set default date values on page load
+        window.onload = function () {
+            const nextMonday = getNextMonday();
+            const endDate = new Date(nextMonday);
+            endDate.setDate(nextMonday.getDate() + 6);
+
+            document.getElementById('startDate').value = formatDate(nextMonday);
+            document.getElementById('endDate').value = formatDate(endDate);
+
+            triggerGenerate();  // Automatically trigger generation when page loads with default dates
+        };
+
+        // Add event listeners to date inputs to trigger file update when dates are changed
+        document.getElementById('startDate').addEventListener('change', triggerGenerate);
+        document.getElementById('endDate').addEventListener('change', triggerGenerate);
+    </script>
+</body>
+</html>

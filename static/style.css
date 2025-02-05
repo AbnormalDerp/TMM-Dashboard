@@ -1,0 +1,127 @@
+body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+#excel-container {
+    width: 70%;  /* Takes up 70% of the screen width */
+    height: 80vh;  /* Adjust height of the scrollable area */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+}
+
+#button-container {
+    width: 25%;  /* Takes up 25% of the screen width */
+    display: flex;
+    flex-direction: column; /* Stack the buttons vertically */
+    gap: 20px;  /* Add space between buttons */
+}
+
+.button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 100%;  /* Make buttons take the full width of their container */
+}
+
+.button.red {
+    background-color: red;
+}
+
+.button.green {
+    background-color: green;
+}
+
+.scrollable-box {
+    width: 80%;
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: white;
+    color: black;
+    border: 1px solid #ddd;
+}
+
+.notification {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #4CAF50;
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;  /* Initially hidden */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;  /* Adjust modal width */
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;  /* Ensure it appears above other elements */
+}
+
+.modal-content {
+    padding: 20px;
+}
+
+.close-btn {
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    float: right;
+    color: #555;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+/* Tab Styles */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    transition: background-color 0.3s;
+}
+
+.tab-button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.tab-content {
+    border: 1px solid #ccc;
+    padding: 10px;
+}
